@@ -1,0 +1,8 @@
+SELECT user_id as user,
+COUNT(order_id) as user_orders_freq, 
+AVG(basket) as basket_value
+
+FROM `bi-2019-test.ad_hoc.orders_jan2021` 
+GROUP BY 1
+ORDER BY user_orders_freq DESC 
+
