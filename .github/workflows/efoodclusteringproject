@@ -1,0 +1,20 @@
+## efood Case Study on Member Segmentation
+
+
+# pandas is used for data manipulation
+import pandas as pd
+# numpy gives us access to some useful data structures
+import numpy as np
+
+# matplotlib allows us to do basic plots
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+# Seaborn is another visualisation library
+import seaborn as sns
+
+# Import a scalar
+from sklearn.preprocessing import scale
+
+# Bring in k-means
+from sklearn.cluster import KMeans
