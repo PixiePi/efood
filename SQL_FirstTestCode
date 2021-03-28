@@ -1,0 +1,25 @@
+
+#query 1 for :- how many orders are placed in the "Breakfast" cuisine (Breakfast_Orders)AND - how many users ordered from the "Breakfast" cuisine (Breakfast_Users)
+
+SELECT
+city,
+COUNT(order_id) as Breakfast_Orders,
+COUNT(DISTINCT(user_id) as Breakfast_Users,
+FROM 'bi-2019-test.ad.hoc.orders_jan2021'
+WHERE cuisine_parent like 'Breakfast'
+GROUP BY city
+HAVING Breakfast_orders > 500
+ORDER BY Breakfast_Orders DESC
+Limit 10
+
+;
+
+#query 2 for: - what is the Average Basket of the Breakfast_Users that we defined before
+
+SELECT ROUND(AVG(basket),1)
+FROM 'bi-2019-test.ad.hoc.orders_jan2021'
+WHERE user_id in (SELECT DISTINCT(userid) FROM 'bi-2019-test.ad.hoc.orders_jan2021' WHERE cuisine_parent like 'Breakfast')
+
+;
+
+
