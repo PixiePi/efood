@@ -1,0 +1,166 @@
+## efood Case Study on User Segmentation
+#We are given a data set of food orders for Januery excluding Athens and Thessaloniki. We have procced the orginal data set and have create a file that we will upload with the bellow variables:
+
+#user: unique user id
+#user_orders_freq: order frequency per user
+#basket_value: avg basket value per user
+
+#Woring the dataset above we need to:
+
+#- Segment existing customers based on their frequency and order value. 
+
+
+#This Notebook will provide the data needed for our final deck. We wille xport the csv and do some final manipulation in excel if needed.
+
+## Import libraries
+# pandas is used for data manipulation
+import pandas as pd
+# numpy gives us access to some useful data structures
+import numpy as np
+
+# matplotlib allows us to do basic plots
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+# Seaborn is another visualisation library
+import seaborn as sns
+
+# Import a scalar
+from sklearn.preprocessing import scale
+
+# Bring in k-means
+from sklearn.cluster import KMeans
+
+## Sourcing the data
+
+# Import the data
+df = pd.read_csv('efood_userdatabasket.csv')
+df.head()
+
+## Exploring and transforming the data
+#Now that we've imported our data, it's useful to run a few summary functions on it in order to understand it better.
+df.info()
+
+#we want to change the float for kmeans purposes
+df['basket_value'] = df['basket_value'].astype(int)
+
+#quick check
+df.info()
+
+#some more info around our variables
+df.describe()
+
+#we can see that we have 162,954 users with an avg basket value of 9.7 products per basket. We also see a 134 basket value 
+
+# create scatter plot through seaborn in order to visualise our data
+sns.scatterplot(x="user_orders_freq", y="basket_value",data=df)
+
+#We see that actually there are not big outliers into the dataset - as well that the main catgorisation is between high value order low frequency and the oposite
+
+## Scaling the data
+
+#Before running any clustering analysis, it is important to [_scale_ our data](https://medium.com/greyatom/why-how-and-when-to-scale-your-features-4b30ab09db5e).
+
+from sklearn.preprocessing import scale
+
+#Import the scale method from sklearn.preprocessing in your libraries section
+from sklearn.preprocessing import scale
+
+#we scale so we make sure that the clustering is done correctly and not messed up - normalization - standarisation 
+
+data_scaled = scale(df[['user_orders_freq','basket_value']])
+print (data_scaled)
+
+## Modelling with k-means
+
+#To run the k-means algorithm, we will use the KMeans method from scikit-learn.
+
+from sklearn.cluster import KMeans
+import numpy as np
+
+
+# we will create a list of the different values of k to test. 
+num_clusters = [1,2,3,4,5,6,7,8,9,10]
+
+# we will create a kmeans model for each value of k. Could use a regular for loop, but let's use a "list comprehension"!
+kmeans_list = [KMeans(n_clusters = i) for i in num_clusters]
+
+# For each value of k, fit the model with our data and use the "inertia" method of KMeans to compute the WSS
+scores = [kmeans_list[i-1].fit(data_scaled).inertia_ for i in num_clusters]
+
+
+# We can choose to set a grid
+sns.set_style('darkgrid')
+
+# Use the lineplot function from seaborn
+sns.lineplot(num_clusters, scores)
+
+# Adding a title and axis labels
+plt.xlabel("Number of clusters k")
+plt.ylabel("Scores")
+plt.title("Elbow test")
+
+#we want to go were the steepness ends 
+
+#Its clear that the after that at the number 3 we get the "elbow effect", sign that we should aim for 3 clusters
+
+#Create teh model
+model = KMeans(n_clusters = 3, random_state= 123)
+#Fit the model to our data
+model.fit(data_scaled)
+# Save the results as a new column in our data
+df['cluster_1'] = model.labels_
+
+#Quick chet on our data set with the clusters
+df.head()
+
+#We want ot visualise our cluster in order to get an understanding of the initial grouping
+facet = sns.lmplot(data=df, x='user_orders_freq', y='basket_value',hue='cluster_1',
+fit_reg=False, legend=True, legend_out=True)
+
+#So we can clearly see that the model has sperated our 3 groups in - 1) High frequency, low order value - 2) High order value low frequency - 3) Low order Value low Frequency
+
+#Now we need to connect our table with our whole dataset that was provided in order to get more information around our clusters.
+
+## Merging our cluster with our main dataset
+
+# Import the dataset with complete data 
+df2 = pd.read_csv('efood_jan_orders.csv')
+df2.head()
+
+#quick check on our original file and make sure we merge on the right variables 
+df.head()
+
+#merging our original df with our complete dataset
+
+df3 = pd.merge(
+    df2,
+    df,
+    how="left",
+    left_on='user_id',
+    right_on='user',
+    left_index=False,
+    right_index=False,
+    sort=True,
+    suffixes=("_x", "_y"),
+    copy=True,
+    indicator=False,
+    validate=None,
+)
+
+#checking our new df3
+df3.head()
+
+#we want to drop quickly some columns that we will not need or are dublicates
+df3 = df3.drop(['user', 'basket_value','user_orders_freq'], axis=1)
+
+#checking again our final df3
+df3.head()
+
+#making sure the data look ok
+df3.info()
+
+# Now we can export are data set and do some small extra manipulations in excel. A true data scientist would continue here, but as I havent written code for over 2 years, I believe its safer for me to do the small bites in excel. :)
+
+#each user should specify the path they want to store the excel file
+df3.to_csv(r'/Users/sofokliszymnis/Desktop/efoodclusters.csv', index = False)
